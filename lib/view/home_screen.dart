@@ -1,9 +1,12 @@
 import 'package:dio/dio.dart';
-import 'package:exam/data/models/products_model.dart';
-import 'package:exam/data/network/controller.dart';
 import 'package:exam/view/cart_screen.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+
+import '../models/model/cart.dart';
+import '../models/model/products_model.dart';
+import '../view_model/product_list_view_model.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -13,124 +16,159 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-
-
-
   final Dio _dio = Dio();
   String url = 'https://api.escuelajs.co/api/v1/products';
 
   List<String> images = [];
 
-  HomeController homeController = HomeController();
+  ProductListViewModel productListViewModel = ProductListViewModel();
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    homeController.getData();
+    productListViewModel.getData();
   }
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        centerTitle: true,
         title: Text('Home'),
+        backgroundColor: Colors.black,
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: FutureBuilder<List<Products>>(
-                future: homeController.getData(),
-                builder: (context, snapshot){
-                  return snapshot.hasData
-                      ? getProduct()
-                      : snapshot.hasError
-                      ? errorWidget()
-                      : loadingWidget();
-                }),
-          )
-        ],
+      body: Padding(
+        padding: const EdgeInsets.only(left: 8, right: 8, top: 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Products',
+            style:  TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+              color: Colors.black
+            ),),
+            SizedBox(
+              height: 10,
+            ),
+            Expanded(
+              child: FutureBuilder<List<Products>>(
+                  future: productListViewModel.getData(),
+                  builder: (context, snapshot) {
+                    return snapshot.hasData
+                        ? getProduct()
+                        : snapshot.hasError
+                            ? errorWidget()
+                            : loadingWidget();
+                  }),
+            )
+          ],
+        ),
       ),
     );
   }
 
   Widget getProduct() => GridView.builder(
-    scrollDirection: Axis.vertical,
-    itemCount: homeController.products.length,
-    gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
-        maxCrossAxisExtent: 350,
-        childAspectRatio: 1,
-        crossAxisSpacing: 10,
-        mainAxisSpacing: 10
-    ),
-    itemBuilder: (context, index) => Container(
-      decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16.0)),
-      child: Stack(
-        children: [
-          // Image.network(
-          //   products[index].images ?? [],
-          //   height: 400,
-          //   width: double.infinity,
-          // ),
-          Positioned(
-            right: 16,
-            left: 16,
-            bottom: 20,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  homeController.products[index].title ?? '',
-                  style: TextStyle(
-                    fontSize: 20,
-                  ),
+        itemCount: productListViewModel.products.length,
+        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 2,
+          childAspectRatio: 0.6,
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+        ),
+        itemBuilder: (context, index) => Container(
+          decoration: BoxDecoration(
+              color: Colors.white, borderRadius: BorderRadius.circular(16.0)),
+          child: Stack(
+            children: [
+              Image.network(
+                productListViewModel.products[index].images![0],
+                height: double.infinity,
+                fit: BoxFit.cover,
+              ),
+              Container(
+                height: double.infinity,
+                decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      tileMode: TileMode.clamp,
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        Colors.white.withOpacity(0),
+                        Colors.black.withOpacity(0.5),
+                        Colors.black.withOpacity(0.8),
+                      ],
+                    )
                 ),
-                const SizedBox(
-                  height: 8.0,
-                ),
-                Text(
-                  homeController.products[index].description ?? '',
-                  style: TextStyle(
-                    fontSize: 12,
-                  ),
-                  maxLines: 2,
-                ),
-                const SizedBox(
-                  height: 8.0,
-                ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              ),
+              Positioned(
+                right: 16,
+                left: 16,
+                bottom: 20,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    ElevatedButton(onPressed: (){
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => CartScreen(
-
-                      )));
-                    },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.amber
-                        ),
-                        child: Text('Add to cart')),
                     Text(
-                      '${homeController.products[index].price}',
+                      productListViewModel.products[index].title ?? '',
+                      maxLines: 1,
                       style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.red
+                        fontSize: 20,
+                        color: Colors.white,
                       ),
                     ),
-                  ],
-                )
-              ],
-            ),
-          ),
-        ],
-      ),
-    ),
+                    const SizedBox(
+                      height: 8,
+                    ),
+                    Text(
+                      productListViewModel.products[index].description ?? '',
+                      style: TextStyle(
+                        fontSize: 12,
+                          color: Colors.white
+                      ),
+                      maxLines: 2,
+                    ),
+                    const SizedBox(
+                      height: 20,
+                    ),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          r'$''${productListViewModel.products[index].price}',
+                          style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white),
+                        ),
+                        Consumer<ShoppingCartProvider>(
+                            builder:
+                            (BuildContext context, ShoppingCartProvider cart, Widget? child){
+                              return  ElevatedButton(
+                                  onPressed: () {
+                                    cart.add(productListViewModel.products[index]);
+                                    Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                        builder: (context) => ShoppingCart(
 
-  );
+                                        )));
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.amber),
+                                  child: Text('Add to cart'));
+                            }
+
+                        ),
+                      ],
+                    )
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
 
   Widget errorWidget() => const Text('Sorry, Something went wrong');
 

@@ -1,7 +1,9 @@
-import 'package:exam/data/network/controller.dart';
 import 'package:exam/view/home_screen.dart';
+import 'package:exam/view_model/product_list_view_model.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
+import 'models/model/cart.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,7 +17,8 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (ctx) => HomeController())
+        ChangeNotifierProvider(create: (ctx) => ProductListViewModel()),
+        ChangeNotifierProvider(create: (ctx) => ShoppingCartProvider()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
